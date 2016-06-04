@@ -3,7 +3,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
 
@@ -77,7 +76,7 @@ void* malloc(size_t size) {
 	}
 
 	if (p == NULL) return NULL;
-	else return p + BLOCK_SIZE;
+	else return ((t_block) p)->data;
 }
 
 void print_heap() {
@@ -95,6 +94,7 @@ void print_heap() {
 			printf("size = %lu\n", p->size);
 			printf("next = %p\n", p->next);
 			printf("free = %d\n", p->free);
+			printf("data = %p\n", p->data);
 			printf("\n");
 		}
 
@@ -107,8 +107,8 @@ void print_heap() {
 int main() {
 	base_address = ((void*) sbrk(0));
 
-	void *k = (int*) malloc(sizeof(int));
-	void *j = (int*) malloc(sizeof(int) * 2);
+	int *k = (int*) malloc(sizeof(int));
+	int *j = (int*) malloc(sizeof(int) * 2);
 
 	if (k) printf("inteiro k alocado com sucesso\n");
 	else printf("problema na alocação do inteiro k\n");
