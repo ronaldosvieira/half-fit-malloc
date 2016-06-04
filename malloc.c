@@ -57,44 +57,41 @@ t_block extend_heap(t_block last, size_t size) {
 
 	if (last) last->next = b;
 
-	return (b);
+	return b;
 }
 
 void* malloc(size_t size) {
-	t_block p;
-	t_block last = NULL;
+	t_block b, last;
 	size = align4(size);
 
-	if (base_address != NULL) {
-		p = find_block(&last, size);
+	if (base_address ) {
+		last = base_address;
+		b = find_block(&last, size);
 
-		if (p != NULL) {
-			if (p->size >= size + BLOCK_SIZE + 4) {
-				split_block(p, size);
+		if (b) {
+			if ((b->size - size) >= (BLOCK_SIZE + 4)) {
+				split_block(b, size);
 			}
 
-			p->free = 0;
+			b->free = 0;
 		} else {
-			p = extend_heap(last, size);
+			b = extend_heap(last, size);
+
+			if (!b) return NULL;
 		}
 	} else {
-		base_address = ((void*) sbrk(0));
-		p = extend_heap(NULL, size);
+		b = extend_heap(NULL, size);
+		
+		if (!b) return NULL;
+
+		base_address = b;
 	}
 
-	/*if (((void*) sbrk(0)) == base_address) {
-		p = extend_heap(last, size);
-	} else {
-		p = find_block(&last, size);
-		if (p == NULL) p = extend_heap(last, size);
-	}*/
-
-	if (p == NULL) return NULL;
-	else return p->data;
+	return b->data;
 }
 
 void print_heap() {
-	t_block p = base_address;
+	t_block b = base_address;
 	int i;
 
 	printf("\n####### HEAP #######\n");
@@ -102,13 +99,13 @@ void print_heap() {
 	if (sbrk(0) == base_address)
 		printf("null\n");
 	else {
-		for (i = 1; p; i++, p = p->next) {
+		for (i = 1; b; i++, b = b->next) {
 			printf("BLOCO %d:\n", i);
-			printf("address = %p\n", p);
-			printf("size = %lu\n", p->size);
-			printf("next = %p\n", p->next);
-			printf("free = %d\n", p->free);
-			printf("data = %p\n", p->data);
+			printf("address = %p\n", b);
+			printf("size = %lu\n", b->size);
+			printf("next = %p\n", b->next);
+			printf("free = %d\n", b->free);
+			printf("data = %p\n", b->data);
 			printf("\n");
 		}
 
