@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
 
@@ -12,12 +13,26 @@ struct s_block {
 	size_t size;
 	t_block next;
 	int free;
+	char data[1];
 };
 
 #define BLOCK_SIZE sizeof(struct s_block)
 
 t_block last = NULL;
 void *base_address;
+
+void split_block(t_block b, size_t size) {
+	t_block new;
+
+	new = (void*) b->data + size;
+
+	new->size = b->size - size - BLOCK_SIZE;
+	new->next = b->next;
+	new->free = 1;
+
+	b->size = size;
+	b->next = new;
+}
 
 t_block find_block(t_block *last, size_t size) {
 	t_block b = base_address;
@@ -27,18 +42,22 @@ t_block find_block(t_block *last, size_t size) {
 		b = b->next;
 	}
 
+	if (b && (b->size >= size + BLOCK_SIZE + 4)) {
+		split_block(b, size);
+	}
+
 	return b;
 }
 
-t_block extend_heap(t_block last, size_t s) {
+t_block extend_heap(t_block last, size_t size) {
 	t_block b;
 
 	b = sbrk(0);
 
-	if (sbrk(BLOCK_SIZE + s) == (void*) -1)
+	if (sbrk(BLOCK_SIZE + size) == (void*) -1)
 		return (NULL);
 
-	b->size = s;
+	b->size = size;
 	b->next = NULL;
 	b->free = 0;
 
@@ -88,8 +107,8 @@ void print_heap() {
 int main() {
 	base_address = ((void*) sbrk(0));
 
-	int *k = (int*) malloc(sizeof(int));
-	int *j = (int*) malloc(sizeof(int));
+	void *k = (int*) malloc(sizeof(int));
+	void *j = (int*) malloc(sizeof(int) * 2);
 
 	if (k) printf("inteiro k alocado com sucesso\n");
 	else printf("problema na alocação do inteiro k\n");
