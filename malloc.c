@@ -17,7 +17,6 @@ struct s_block {
 
 #define BLOCK_SIZE sizeof(struct s_block)
 
-t_block last = NULL;
 void *base_address = NULL;
 
 void split_block(t_block b, size_t size) {
@@ -41,10 +40,6 @@ t_block find_block(t_block *last, size_t size) {
 		b = b->next;
 	}
 
-	if (b && (b->size >= size + BLOCK_SIZE + 4)) {
-		split_block(b, size);
-	}
-
 	return b;
 }
 
@@ -66,19 +61,36 @@ t_block extend_heap(t_block last, size_t size) {
 }
 
 void* malloc(size_t size) {
-	void *p;
+	t_block p;
+	t_block last = NULL;
+	size = align4(size);
 
-	if (base_address == NULL) base_address = ((void*) sbrk(0));
+	if (base_address != NULL) {
+		p = find_block(&last, size);
 
-	if (((void*) sbrk(0)) == base_address) {
+		if (p != NULL) {
+			if (p->size >= size + BLOCK_SIZE + 4) {
+				split_block(p, size);
+			}
+
+			p->free = 0;
+		} else {
+			p = extend_heap(last, size);
+		}
+	} else {
+		base_address = ((void*) sbrk(0));
+		p = extend_heap(NULL, size);
+	}
+
+	/*if (((void*) sbrk(0)) == base_address) {
 		p = extend_heap(last, size);
 	} else {
 		p = find_block(&last, size);
 		if (p == NULL) p = extend_heap(last, size);
-	}
+	}*/
 
 	if (p == NULL) return NULL;
-	else return ((t_block) p)->data;
+	else return p->data;
 }
 
 void print_heap() {
@@ -108,7 +120,7 @@ void print_heap() {
 
 int main() {
 	int *k = (int*) malloc(sizeof(int));
-	int *j = (int*) malloc(sizeof(int) * 2);
+	int *j = (int*) malloc(sizeof(int));
 
 	if (k) printf("inteiro k alocado com sucesso\n");
 	else printf("problema na alocação do inteiro k\n");
