@@ -18,7 +18,7 @@ struct s_block {
 #define BLOCK_SIZE sizeof(struct s_block)
 
 t_block last = NULL;
-void *base_address;
+void *base_address = NULL;
 
 void split_block(t_block b, size_t size) {
 	t_block new;
@@ -68,6 +68,8 @@ t_block extend_heap(t_block last, size_t size) {
 void* malloc(size_t size) {
 	void *p;
 
+	if (base_address == NULL) base_address = ((void*) sbrk(0));
+
 	if (((void*) sbrk(0)) == base_address) {
 		p = extend_heap(last, size);
 	} else {
@@ -105,8 +107,6 @@ void print_heap() {
 }
 
 int main() {
-	base_address = ((void*) sbrk(0));
-
 	int *k = (int*) malloc(sizeof(int));
 	int *j = (int*) malloc(sizeof(int) * 2);
 
