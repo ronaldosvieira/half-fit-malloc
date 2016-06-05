@@ -10,14 +10,33 @@ typedef struct s_block *t_block;
 
 struct s_block {
 	size_t size;
+	t_block prev;
 	t_block next;
 	int free;
+	void* ptr;
 	char data[1];
 };
 
 #define BLOCK_SIZE sizeof(struct s_block)
 
 void *base_address = NULL;
+
+t_block get_block(void* p) {
+	char* tmp;
+	tmp = p;
+
+	return (p = tmp -= BLOCK_SIZE);
+}
+
+int valid_addr(void* p) {
+	if (base_address) {
+		if (p > base_address && p < sbrk(0)) {
+			return p == (get_block(p))->ptr;
+		}
+	}
+
+	return 0;
+}
 
 void split_block(t_block b, size_t size) {
 	t_block new;
@@ -60,6 +79,17 @@ t_block extend_heap(t_block last, size_t size) {
 	return b;
 }
 
+t_block fusion(t_block b) {
+	if (b->next && b->next->free) {
+		b->size += BLOCK_SIZE + b->next->size;
+		b->next = b->next->next;
+
+		if (b->next) b->next->prev = b;
+	}
+
+	return b;
+}
+
 void* malloc(size_t size) {
 	t_block b, last;
 	size = align4(size);
@@ -69,6 +99,8 @@ void* malloc(size_t size) {
 		b = find_block(&last, size);
 
 		if (b) {
+			fusion(b);
+
 			if ((b->size - size) >= (BLOCK_SIZE + 4)) {
 				split_block(b, size);
 			}
@@ -105,6 +137,28 @@ void* calloc(size_t number, size_t size) {
 	return new;
 }
 
+void free(void* p) {
+	t_block b;
+
+	if (valid_addr(p)) {
+		b = get_block(p);
+		b->free = 1;
+
+		if (b->prev && b->prev->free) {
+			b = fusion(b->prev);
+		}
+
+		if (b->next) {
+			fusion(b);
+		} else {
+			if (b->prev) b->prev->next = NULL;
+			else base_address = NULL;
+
+			brk(b);
+		}
+	}
+}
+
 void print_heap() {
 	t_block b = base_address;
 	int i;
@@ -139,6 +193,10 @@ int main() {
 
 	if (j) printf("inteiro j alocado com sucesso\n");
 	else printf("problema na alocação do inteiro k\n");
+
+	print_heap();
+
+	free(j);
 
 	print_heap();
 
