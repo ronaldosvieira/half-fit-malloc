@@ -1,5 +1,3 @@
-/* An horrible dummy malloc */
-
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,7 +16,7 @@ struct s_block {
 };
 
 // sizeof(struct s_block) nao vai retornar o numero correto
-#define BLOCK_SIZE 20
+#define BLOCK_SIZE 40
 
 void *base_address = NULL;
 
@@ -103,7 +101,7 @@ void* malloc(size_t size) {
 	t_block b, last;
 	size = align4(size);
 
-	if (base_address ) {
+	if (base_address) {
 		last = base_address;
 		b = find_block(&last, size);
 
@@ -127,7 +125,7 @@ void* malloc(size_t size) {
 
 		base_address = b;
 	}
-
+	
 	return b->data;
 }
 
@@ -196,17 +194,25 @@ void print_heap() {
 
 int main() {
 	int *k = (int*) malloc(sizeof(int));
-	int *j = (int*) malloc(sizeof(int));
+	int *j = (int*) malloc(sizeof(int) * 20);
+	int *i = (int*) malloc(sizeof(int));
 
 	if (k) printf("inteiro k alocado com sucesso\n");
 	else printf("problema na alocação do inteiro k\n");
 
 	if (j) printf("inteiro j alocado com sucesso\n");
-	else printf("problema na alocação do inteiro k\n");
+	else printf("problema na alocação do inteiro j\n");
+
+	if (i) printf("inteiro i alocado com sucesso\n");
+	else printf("problema na alocação do inteiro i\n");
 
 	print_heap();
 
 	free(j);
+
+	print_heap();
+
+	j = (int*) malloc(sizeof(int));
 
 	print_heap();
 
