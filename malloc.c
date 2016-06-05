@@ -17,7 +17,8 @@ struct s_block {
 	char data[1];
 };
 
-#define BLOCK_SIZE sizeof(struct s_block)
+// sizeof(struct s_block) nao vai retornar o numero correto
+#define BLOCK_SIZE 20
 
 void *base_address = NULL;
 
@@ -41,14 +42,20 @@ int valid_addr(void* p) {
 void split_block(t_block b, size_t size) {
 	t_block new;
 
-	new = (void*) b->data + size;
+	new = (t_block) (b->data + size);
 
 	new->size = b->size - size - BLOCK_SIZE;
 	new->next = b->next;
+	new->prev = b;
 	new->free = 1;
+	new->ptr = new->data;
 
 	b->size = size;
 	b->next = new;
+
+	if (new->next) {
+		new->next->prev = new;
+	}
 }
 
 t_block find_block(t_block *last, size_t size) {
@@ -68,10 +75,12 @@ t_block extend_heap(t_block last, size_t size) {
 	b = sbrk(0);
 
 	if (sbrk(BLOCK_SIZE + size) == (void*) -1)
-		return (NULL);
+		return NULL;
 
 	b->size = size;
 	b->next = NULL;
+	b->prev = last;
+	b->ptr = b->data;
 	b->free = 0;
 
 	if (last) last->next = b;
@@ -174,6 +183,7 @@ void print_heap() {
 			printf("size = %lu\n", b->size);
 			printf("next = %p\n", b->next);
 			printf("free = %d\n", b->free);
+			printf("ptr  = %p\n", b->ptr);
 			printf("data = %p\n", b->data);
 			printf("\n");
 		}
