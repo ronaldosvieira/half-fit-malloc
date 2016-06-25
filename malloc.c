@@ -58,13 +58,19 @@ void split_block(t_block b, size_t size) {
 
 t_block find_block(t_block *last, size_t size) {
 	t_block b = base_address;
+	t_block best = NULL;
 
-	while (b && !(b->free && b->size >= size)) {
+	while (b) {
+		if (b->free && b->size >= size) {
+			if (!best || b->size < best->size)
+				best = b;
+		}
+
 		*last = b;
 		b = b->next;
 	}
 
-	return b;
+	return best? best : b;
 }
 
 t_block extend_heap(t_block last, size_t size) {
@@ -179,10 +185,12 @@ void print_heap() {
 			printf("BLOCO %d:\n", i);
 			printf("address = %p\n", b);
 			printf("size = %lu\n", b->size);
+			printf("prev = %p\n", b->prev);
 			printf("next = %p\n", b->next);
 			printf("free = %d\n", b->free);
 			printf("ptr  = %p\n", b->ptr);
 			printf("data = %p\n", b->data);
+			printf("content = %d\n", *((int*) b->data));
 			printf("\n");
 		}
 
@@ -196,19 +204,19 @@ int main() {
 	int *k = (int*) malloc(sizeof(int));
 	int *j = (int*) malloc(sizeof(int) * 20);
 	int *i = (int*) malloc(sizeof(int));
+	int *h = (int*) malloc(sizeof(int));
+	int *g = (int*) malloc(sizeof(int));
 
-	if (k) printf("inteiro k alocado com sucesso\n");
-	else printf("problema na alocação do inteiro k\n");
-
-	if (j) printf("inteiro j alocado com sucesso\n");
-	else printf("problema na alocação do inteiro j\n");
-
-	if (i) printf("inteiro i alocado com sucesso\n");
-	else printf("problema na alocação do inteiro i\n");
+	*k = 11;
+	*j = 12;
+	*i = 13;
+	*h = 14;
+	*g = 15;
 
 	print_heap();
 
 	free(j);
+	free(h);
 
 	print_heap();
 
