@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
 
@@ -17,8 +18,11 @@ struct s_block {
 
 // sizeof(struct s_block) nao vai retornar o numero correto
 #define BLOCK_SIZE 40
+#define WORD_SIZE 32
 
 void *base_address = NULL;
+int has_free_blocks[WORD_SIZE] = {0};
+t_block free_blocks[WORD_SIZE] = {NULL};
 
 t_block get_block(void* p) {
 	char* tmp;
@@ -37,8 +41,51 @@ int valid_addr(void* p) {
 	return 0;
 }
 
+int insert_free_block(t_block b) {
+	int index = floor(1.0 * log10(b->size) / log10(2));
+
+	t_block temp = free_blocks[index];
+	// t_block* c = ((void*) b->data);
+
+	if (temp) b->ptr = temp;
+
+	free_blocks[index] = b;
+	printf("inseriu %p\n", free_blocks[index]);
+	return 0;
+}
+
+int remove_free_block(t_block b) {printf("calling remove\n");
+	int index = floor(1.0 * log10(b->size) / log10(2));
+
+	t_block temp = free_blocks[index];
+	t_block last = NULL;
+
+	while (temp) {
+		printf("temp = %p\n", temp);
+		if (temp->ptr == b->ptr) {
+			if (last) {
+				void* c = ((void*) last->data);
+				c = ((void*) temp->data);
+			} else {
+				free_blocks[index] = NULL;
+			}
+			printf("achouu\n");
+			return 0;
+		}
+
+		last = temp;
+		temp = (t_block) temp->data;
+
+		if (!valid_addr(temp)) break;
+	}
+	printf("deu ruim\n");
+	return 1;
+}
+
 void split_block(t_block b, size_t size) {
 	t_block new;
+
+	remove_free_block(b);
 
 	new = (t_block) (b->data + size);
 
@@ -54,23 +101,34 @@ void split_block(t_block b, size_t size) {
 	if (new->next) {
 		new->next->prev = new;
 	}
+
+	insert_free_block(b);
+	insert_free_block(new);
+}
+
+int get_index(size_t size) {
+	return size == 1? 0 : floor(1.0 * log10(size - 1) / log10(2)) + 1;
 }
 
 t_block find_block(t_block *last, size_t size) {
 	t_block b = base_address;
-	t_block best = NULL;
+	/*t_block best = NULL;*/
 
 	while (b) {
-		if (b->free && b->size >= size) {
+		/*if (b->free && b->size >= size) {
 			if (!best || b->size < best->size)
 				best = b;
-		}
+		}*/
 
 		*last = b;
 		b = b->next;
 	}
 
-	return best? best : b;
+	/*return best? best : b;*/
+
+	t_block block = free_blocks[get_index(size)];
+
+	return block? block : NULL;
 }
 
 t_block extend_heap(t_block last, size_t size) {
@@ -100,6 +158,9 @@ t_block fusion(t_block b) {
 		if (b->next) b->next->prev = b;
 	}
 
+	remove_free_block(b);
+	insert_free_block(b);
+
 	return b;
 }
 
@@ -112,9 +173,10 @@ void* malloc(size_t size) {
 		b = find_block(&last, size);
 
 		if (b) {
+			printf("call to fusion on malloc\n");
 			fusion(b);
 
-			if ((b->size - size) >= (BLOCK_SIZE + 4)) {
+			if ((b->size - size) >= (BLOCK_SIZE + 8)) {
 				split_block(b, size);
 			}
 
@@ -158,10 +220,12 @@ void free(void* p) {
 		b->free = 1;
 
 		if (b->prev && b->prev->free) {
+			printf("call to fusion on free1\n");
 			b = fusion(b->prev);
 		}
 
 		if (b->next) {
+			printf("call to fusion on free2\n");
 			fusion(b);
 		} else {
 			if (b->prev) b->prev->next = NULL;
@@ -206,23 +270,55 @@ int main() {
 	int *i = (int*) malloc(sizeof(int));
 	int *h = (int*) malloc(sizeof(int));
 	int *g = (int*) malloc(sizeof(int));
+	int *f = (int*) malloc(sizeof(int));
 
 	*k = 11;
 	*j = 12;
 	*i = 13;
 	*h = 14;
 	*g = 15;
+	*f = 16;
+
+	// print_heap();
+
+	printf("freeing k\n");
+	free(k);
+
+	printf("freeing i\n");
+	free(i);
+
+	printf("freeing g\n");
+	free(g);
+
+	int m;
+	for (m = 0; m < WORD_SIZE; m++) {
+		printf("%d = %p %p\t", 
+			m, 
+			free_blocks[m]? free_blocks[m] : NULL,
+			free_blocks[m]? free_blocks[m]->data : NULL);
+		if (m % 2 == 1) printf("\n");
+	}
+	printf("\n");
 
 	print_heap();
+	/*getchar();
 
-	free(j);
-	free(h);
+	// printf("%p\n", free_blocks[2]->block);fflush(stdout);
 
-	print_heap();
+	int* n = (int*) malloc(sizeof(int));
 
-	j = (int*) malloc(sizeof(int));
+	*n = 21;
 
-	print_heap();
+	for (m = 0; m < WORD_SIZE; m++) {
+		printf("%d = %p %p\t", 
+			m, 
+			free_blocks[m]? free_blocks[m] : NULL,
+			free_blocks[m]? ((void*) free_blocks[m]->data) : NULL);
+		if (m % 2 == 1) printf("\n");
+	}
+	printf("\n");
+
+	print_heap();*/
 
 	return 0;
 }
