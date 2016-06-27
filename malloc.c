@@ -61,6 +61,14 @@ int get_free_block(t_block b) {
 	return 0;
 }
 
+int push_free_block(t_block b) {
+	return 0;
+}
+
+t_block pop_free_block(t_block b) {
+	return NULL;
+}
+
 void split_block(t_block b, size_t size) {
 	t_block new;
 
@@ -250,8 +258,6 @@ int main() {
 
 	t_block b = get_block(k);
 	free_blocks[index(b->size)] = b;
-
-	printf("%d\n", valid_addr(k));
 
 	int res = get_free_block(b);
 
