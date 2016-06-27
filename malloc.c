@@ -21,7 +21,7 @@ struct s_block {
 #define BLOCK_SIZE 40
 #define WORD_SIZE 32
 
-int has_free_blocks[WORD_SIZE] = {0};
+int amount_free_blocks[WORD_SIZE] = {0};
 t_block free_blocks[WORD_SIZE] = {NULL};
 
 void *base_address = NULL;
@@ -62,7 +62,16 @@ int get_free_block(t_block b) {
 }
 
 int push_free_block(t_block b) {
-	return 0;
+	int i = index(b->size);
+
+	if (amount_free_blocks[i] < 11) {
+		free_blocks[i] = b;
+		amount_free_blocks[i]++;
+
+		return 0;
+	} else {
+		return -1;
+	}
 }
 
 t_block pop_free_block(t_block b) {
@@ -257,7 +266,7 @@ int main() {
 	// print_heap();
 
 	t_block b = get_block(k);
-	free_blocks[index(b->size)] = b;
+	push_free_block(b);
 
 	int res = get_free_block(b);
 
