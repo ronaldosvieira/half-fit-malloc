@@ -3,9 +3,18 @@
 #include <stdio.h>
 #include <math.h>
 
+#define DEBUG 3
+
+#if defined(DEBUG) && DEBUG > 0
+	#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
+    __FILE__, __LINE__, __func__, ##args)
+#else
+	#define DEBUG_PRINT(fmt, args...) /* Don't do anything in release builds */
+#endif
+
 #define align4(x) (((((x)-1)>>2)<<2)+4)
 #define bindex(s) (int)floor(1.0*log10(s)/log10(2))
-#define rindex(s) (int)floor(1.0*log10(s-1)/log10(2))+1
+#define rindex(r) (int)floor(1.0*log10(r-1)/log10(2))+1
 
 typedef struct s_block *t_block;
 
@@ -243,6 +252,9 @@ void print_heap() {
 }
 
 int main() {
+	DEBUG_PRINT("Debugging is enabled.\n");    
+    DEBUG_PRINT("Debug level: %d\n", (int) DEBUG);
+
 	int *k = (int*) mymalloc(sizeof(int));
 	// int *j = (int*) malloc(sizeof(int) * 20);
 	// int *i = (int*) malloc(sizeof(int));
