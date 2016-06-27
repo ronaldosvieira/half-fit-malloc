@@ -35,7 +35,7 @@ t_block get_block(void* p) {
 
 int valid_addr(void* p) {
 	if (base_address) {
-		if (p >= base_address && p < sbrk(0)) {
+		if (p > base_address && p < sbrk(0)) {
 			return p == (get_block(p))->ptr;
 		}
 	}
