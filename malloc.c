@@ -69,7 +69,7 @@ int get_free_block(t_block b) {
 
 	t_block temp = free_blocks[index];
 	DEBUG_PRINT("temp = %p\n", temp);
-	
+
 	while (i < amount_free_blocks[index] && valid_addr(temp->data)) {
 		++i;
 
@@ -115,7 +115,7 @@ int push_free_block(t_block b) {
 			DEBUG_PRINT("temp = %p\n", temp);
 
 			for (i = 0; i < amount_free_blocks[index] - 1; ++i) {
-				temp = (void*) *(temp->data);
+				temp = *((int*) temp->ptr);
 				DEBUG_PRINT("temp = %p\n", temp);
 			}
 
@@ -312,13 +312,13 @@ int main() {
 	// int *j = (int*) malloc(sizeof(int) * 20);
 	// int *i = (int*) malloc(sizeof(int));
 	int *h = (int*) mymalloc(sizeof(int));
-	//int *g = (int*) mymalloc(sizeof(int));
+	int *g = (int*) mymalloc(sizeof(int));
 
 	*k = 11;
 	// *j = 12;
 	// *i = 13;
 	*h = 14;
-	//*g = 15;
+	*g = 15;
 
 	// print_heap();
 
@@ -337,10 +337,10 @@ int main() {
 	t_block hb = get_block(h);
 	push_free_block(hb);
 
-	//print_heap();
+	t_block gb = get_block(g);
+	push_free_block(gb);
 
-	/*t_block gb = get_block(g);
-	push_free_block(gb);*/
+	print_heap();
 
 	int resk = get_free_block(kb);
 	int resh = get_free_block(hb);
