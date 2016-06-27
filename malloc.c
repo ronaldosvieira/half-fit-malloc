@@ -1,8 +1,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
+#define index(s) (int)floor(1.0*log10(s)/log10(2))
 
 typedef struct s_block *t_block;
 
@@ -17,6 +19,10 @@ struct s_block {
 
 // sizeof(struct s_block) nao vai retornar o numero correto
 #define BLOCK_SIZE 40
+#define WORD_SIZE 32
+
+int has_free_blocks[WORD_SIZE] = {0};
+t_block free_blocks[WORD_SIZE] = {NULL};
 
 void *base_address = NULL;
 
@@ -29,9 +35,27 @@ t_block get_block(void* p) {
 
 int valid_addr(void* p) {
 	if (base_address) {
-		if (p > base_address && p < sbrk(0)) {
+		if (p >= base_address && p < sbrk(0)) {
 			return p == (get_block(p))->ptr;
 		}
+	}
+
+	return 0;
+}
+
+int get_free_block(t_block b) {
+	t_block temp = free_blocks[index(b->size)];
+	int i = 0;
+
+	while (temp && valid_addr(temp->data)) {
+		++i;
+
+		if (temp->ptr == b->ptr
+			&& temp->size == b->size) {
+			return i;
+		}
+
+		temp = (void*) *(temp->data);
 	}
 
 	return 0;
@@ -103,7 +127,7 @@ t_block fusion(t_block b) {
 	return b;
 }
 
-void* malloc(size_t size) {
+void* mymalloc(size_t size) {
 	t_block b, last;
 	size = align4(size);
 
@@ -139,7 +163,7 @@ void* calloc(size_t number, size_t size) {
 	size_t *new;
 	size_t s4, i;
 
-	new = malloc(number * size);
+	new = mymalloc(number * size);
 
 	if (new) {
 		s4 = align4(number * size) << 2;
@@ -201,28 +225,37 @@ void print_heap() {
 }
 
 int main() {
-	int *k = (int*) malloc(sizeof(int));
-	int *j = (int*) malloc(sizeof(int) * 20);
-	int *i = (int*) malloc(sizeof(int));
-	int *h = (int*) malloc(sizeof(int));
-	int *g = (int*) malloc(sizeof(int));
+	int *k = (int*) mymalloc(sizeof(int));
+	// int *j = (int*) malloc(sizeof(int) * 20);
+	// int *i = (int*) malloc(sizeof(int));
+	// int *h = (int*) malloc(sizeof(int));
+	// int *g = (int*) malloc(sizeof(int));
 
-	*k = 11;
-	*j = 12;
-	*i = 13;
-	*h = 14;
-	*g = 15;
+	// *k = 11;
+	// *j = 12;
+	// *i = 13;
+	// *h = 14;
+	// *g = 15;
 
-	print_heap();
+	// print_heap();
 
-	free(j);
-	free(h);
+	// free(j);
+	// free(h);
 
-	print_heap();
+	// print_heap();
 
-	j = (int*) malloc(sizeof(int));
+	// j = (int*) malloc(sizeof(int));
 
-	print_heap();
+	// print_heap();
+
+	t_block b = get_block(k);
+	free_blocks[index(b->size)] = b;
+
+	printf("%d\n", valid_addr(k));
+
+	int res = get_free_block(b);
+
+	printf("%d\n", res);
 
 	return 0;
 }
