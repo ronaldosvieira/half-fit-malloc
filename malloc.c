@@ -54,12 +54,21 @@ int valid_addr(void* p) {
 }
 
 int get_free_block(t_block b) {
-	t_block temp = free_blocks[bindex(b->size)];
-	int i = 0;
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("t_block b = %p\n", b);
 
-	while (temp && valid_addr(temp->data)) {
-		++i;
+	if (!valid_addr(b->data)) {
+		DEBUG_PRINT("ERROR: b is not a valid block!\n");
+		return -1;
+	}
 
+	int index = bindex(b->size);
+	t_block temp = free_blocks[index];
+	int i;
+
+	DEBUG_PRINT("bindex(b->size) = %d\n", index);
+
+	for (i = 0; i < amount_free_blocks[index] && valid_addr(temp->data); ++i) {
 		if (temp->ptr == b->ptr
 			&& temp->size == b->size) {
 			return i;
@@ -72,14 +81,45 @@ int get_free_block(t_block b) {
 }
 
 int push_free_block(t_block b) {
-	int i = bindex(b->size);
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("t_block b = %p\n", b);
 
-	if (amount_free_blocks[i] < 11) {
-		free_blocks[i] = b;
-		amount_free_blocks[i]++;
+	if (!valid_addr(b->data)) {
+		DEBUG_PRINT("ERROR: b is not a valid block!\n");
+		return -1;
+	}
+
+	int index = bindex(b->size);
+	int i;
+	t_block temp = NULL;
+
+	DEBUG_PRINT("bindex(b->size) = %d\n", index);
+
+	if (amount_free_blocks[index] < 11) {
+		DEBUG_PRINT("amount_free_blocks[%d] < 11\n", index);
+
+		if (amount_free_blocks[index] == 0) {
+			DEBUG_PRINT("amount_free_blocks[%d] == 0\n", index);
+
+			free_blocks[index] = b;
+		} else {
+			DEBUG_PRINT("amount_free_blocks[%d] != 0\n", index);
+			temp = free_blocks[index];
+			DEBUG_PRINT("temp = %p\n", temp);
+
+			for (i = 0; i < amount_free_blocks[index] - 1; ++i) {
+				temp = (void*) *(temp->data);
+			}
+
+			*temp->data = b;
+		}
+
+		amount_free_blocks[index]++;
 
 		return 0;
 	} else {
+		DEBUG_PRINT("amount_free_blocks[%d] >= 11\n", index);
+
 		return -1;
 	}
 }
@@ -258,13 +298,13 @@ int main() {
 	int *k = (int*) mymalloc(sizeof(int));
 	// int *j = (int*) malloc(sizeof(int) * 20);
 	// int *i = (int*) malloc(sizeof(int));
-	// int *h = (int*) malloc(sizeof(int));
+	int *h = (int*) mymalloc(sizeof(int));
 	// int *g = (int*) malloc(sizeof(int));
 
-	// *k = 11;
+	*k = 11;
 	// *j = 12;
 	// *i = 13;
-	// *h = 14;
+	*h = 14;
 	// *g = 15;
 
 	// print_heap();
@@ -278,12 +318,16 @@ int main() {
 
 	// print_heap();
 
-	t_block b = get_block(k);
-	push_free_block(b);
+	t_block kb = get_block(k);
+	push_free_block(kb);
 
-	int res = get_free_block(b);
+	t_block hb = get_block(h);
+	//push_free_block(hb);
 
-	printf("%d\n", res);
+	int resk = get_free_block(kb);
+	int resh = get_free_block(hb);
+
+	printf("%d %d\n", resk, resh);
 
 	return 0;
 }
