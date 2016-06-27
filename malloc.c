@@ -63,20 +63,27 @@ int get_free_block(t_block b) {
 	}
 
 	int index = bindex(b->size);
-	t_block temp = free_blocks[index];
-	int i;
+	int i = 0;
 
 	DEBUG_PRINT("bindex(b->size) = %d\n", index);
 
-	for (i = 0; i < amount_free_blocks[index] && valid_addr(temp->data); ++i) {
+	t_block temp = free_blocks[index];
+	DEBUG_PRINT("temp = %p\n", temp);
+	
+	while (i < amount_free_blocks[index] && valid_addr(temp->data)) {
+		++i;
+
 		if (temp->ptr == b->ptr
 			&& temp->size == b->size) {
+			DEBUG_PRINT("**END**\n\n");
 			return i;
 		}
 
-		temp = (void*) *(temp->data);
+		temp = *((int*) temp->ptr);
+		DEBUG_PRINT("temp = %p\n", temp);
 	}
 
+	DEBUG_PRINT("**END**\n\n");
 	return 0;
 }
 
@@ -109,17 +116,23 @@ int push_free_block(t_block b) {
 
 			for (i = 0; i < amount_free_blocks[index] - 1; ++i) {
 				temp = (void*) *(temp->data);
+				DEBUG_PRINT("temp = %p\n", temp);
 			}
 
-			*temp->data = b;
+			int* c = (int*) temp->ptr;
+			*c = (int*) b;
+
+			DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
 		}
 
 		amount_free_blocks[index]++;
 
+		DEBUG_PRINT("**END**\n\n");
 		return 0;
 	} else {
 		DEBUG_PRINT("amount_free_blocks[%d] >= 11\n", index);
 
+		DEBUG_PRINT("**END**\n\n");
 		return -1;
 	}
 }
@@ -293,19 +306,19 @@ void print_heap() {
 
 int main() {
 	DEBUG_PRINT("Debugging is enabled.\n");    
-    DEBUG_PRINT("Debug level: %d\n", (int) DEBUG);
+    DEBUG_PRINT("Debug level: %d\n\n", (int) DEBUG);
 
 	int *k = (int*) mymalloc(sizeof(int));
 	// int *j = (int*) malloc(sizeof(int) * 20);
 	// int *i = (int*) malloc(sizeof(int));
 	int *h = (int*) mymalloc(sizeof(int));
-	// int *g = (int*) malloc(sizeof(int));
+	//int *g = (int*) mymalloc(sizeof(int));
 
 	*k = 11;
 	// *j = 12;
 	// *i = 13;
 	*h = 14;
-	// *g = 15;
+	//*g = 15;
 
 	// print_heap();
 
@@ -322,12 +335,20 @@ int main() {
 	push_free_block(kb);
 
 	t_block hb = get_block(h);
-	//push_free_block(hb);
+	push_free_block(hb);
+
+	//print_heap();
+
+	/*t_block gb = get_block(g);
+	push_free_block(gb);*/
 
 	int resk = get_free_block(kb);
 	int resh = get_free_block(hb);
 
 	printf("%d %d\n", resk, resh);
+
+	int* ptrr = (int*) free_blocks[2]->ptr;
+	printf("%p %p\n", free_blocks[2], (void*) *ptrr);
 
 	return 0;
 }
