@@ -4,7 +4,8 @@
 #include <math.h>
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
-#define index(s) (int)floor(1.0*log10(s)/log10(2))
+#define bindex(s) (int)floor(1.0*log10(s)/log10(2))
+#define rindex(s) (int)floor(1.0*log10(s-1)/log10(2))+1
 
 typedef struct s_block *t_block;
 
@@ -44,7 +45,7 @@ int valid_addr(void* p) {
 }
 
 int get_free_block(t_block b) {
-	t_block temp = free_blocks[index(b->size)];
+	t_block temp = free_blocks[bindex(b->size)];
 	int i = 0;
 
 	while (temp && valid_addr(temp->data)) {
@@ -62,7 +63,7 @@ int get_free_block(t_block b) {
 }
 
 int push_free_block(t_block b) {
-	int i = index(b->size);
+	int i = bindex(b->size);
 
 	if (amount_free_blocks[i] < 11) {
 		free_blocks[i] = b;
