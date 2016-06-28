@@ -114,13 +114,10 @@ int push_free_block(t_block b) {
 			temp = free_blocks[index];
 			DEBUG_PRINT("temp = %p\n", temp);
 
-			for (i = 0; i < amount_free_blocks[index] - 1; ++i) {
-				temp = *((int*) temp->ptr);
-				DEBUG_PRINT("temp = %p\n", temp);
-			}
+			int* c = (int*) b->ptr;
+			*c = (int*) temp;
 
-			int* c = (int*) temp->ptr;
-			*c = (int*) b;
+			free_blocks[index] = b;
 
 			DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
 		}
