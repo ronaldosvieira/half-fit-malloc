@@ -192,7 +192,7 @@ t_block pop_free_block(size_t size) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("size_t size = %lu\n", size);
 
-	int index = bindex(size);
+	int index = rindex(size);
 	t_block temp = NULL;
 
 	if (amount_free_blocks[index]) {
