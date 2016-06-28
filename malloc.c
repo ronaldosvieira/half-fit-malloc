@@ -36,6 +36,11 @@ t_block free_blocks[WORD_SIZE] = {NULL};
 
 void *base_address = NULL;
 
+/**
+ * Obtém um ponteiro para o bloco associado a uma alocação de memória
+ * @param p Endereço da memória alocada
+ * @return Endereço do bloco
+ */
 t_block get_block(void* p) {
 	char* tmp;
 	tmp = p;
@@ -43,6 +48,12 @@ t_block get_block(void* p) {
 	return (p = tmp -= BLOCK_SIZE);
 }
 
+/**
+ * Checa se um endereço corresponde a uma alocação de memória
+ * feita pelo hfmalloc
+ * @param p Endereço a ser checado
+ * @return 1 caso o endereço corresponda a uma alocação de memória
+ */
 int valid_addr(void* p) {
 	if (base_address) {
 		if (p > base_address && p < sbrk(0)) {
@@ -209,6 +220,11 @@ t_block pop_free_block(size_t size) {
 	return temp;
 }
 
+/**
+ * Divide um bloco em dois, caso o bloco seja grande o suficiente
+ * @param b Bloco a ser dividido
+ * @param size Tamanho alvo de um dos blocos
+ */
 void split_block(t_block b, size_t size) {
 	t_block new;
 
@@ -228,6 +244,15 @@ void split_block(t_block b, size_t size) {
 	}
 }
 
+/**
+ * Busca um bloco livre de um determinado tamanho
+ * na lista de blocos livres utilizando a estratégia
+ * first fit
+ * @param last Endereço do último bloco procurado
+ * @param size Tamanho mínimo do bloco
+ * @return Um bloco livre de tamanho >= size, caso exista.
+ * 	NULL caso contrário.
+ */
 t_block find_block(t_block *last, size_t size) {
 	t_block b = base_address;
 	t_block best = NULL;
@@ -245,6 +270,12 @@ t_block find_block(t_block *last, size_t size) {
 	return best? best : b;
 }
 
+/**
+ * Aumenta o tamanho da heap
+ * @param last Endereço do último bloco procurado
+ * @param size Tamanho a ser requisitado
+ * @return Um novo bloco com uma alocação de tamanho size
+ */
 t_block extend_heap(t_block last, size_t size) {
 	t_block b;
 
@@ -264,6 +295,12 @@ t_block extend_heap(t_block last, size_t size) {
 	return b;
 }
 
+/**
+ * Realiza a fusão de um bloco com o bloco subsequente,
+ * se este estiver livre
+ * @param b Endereço do bloco a ser fundido
+ * @return Endereço do bloco, independente se foi fundido
+ */
 t_block fusion(t_block b) {
 	if (b->next && b->next->free) {
 		b->size += BLOCK_SIZE + b->next->size;
@@ -275,6 +312,11 @@ t_block fusion(t_block b) {
 	return b;
 }
 
+/**
+ * Realiza uma alocação dinâmica na memória de tamanho size
+ * @param size Tamanho da alocação a ser feita
+ * @return Endereço da alocação realizada
+ */
 void* mymalloc(size_t size) {
 	t_block b, last;
 	size = align4(size);
@@ -322,6 +364,11 @@ void* calloc(size_t number, size_t size) {
 	return new;
 }
 
+/**
+ * Realiza a desalocação de uma alocação feita
+ * com o hfmalloc
+ * @param p Endereço da alocação a ser desalocada
+ */
 void free(void* p) {
 	t_block b;
 
