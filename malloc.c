@@ -53,11 +53,11 @@ int valid_addr(void* p) {
 	return 0;
 }
 
-int get_free_block(t_block b) {
+int check_free_block(t_block b) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("t_block b = %p\n", b);
 
-	if (!valid_addr(b->data)) {
+	if (!b || !valid_addr(b->data)) {
 		DEBUG_PRINT("ERROR: b is not a valid block!\n");
 		return -1;
 	}
@@ -91,13 +91,12 @@ int push_free_block(t_block b) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("t_block b = %p\n", b);
 
-	if (!valid_addr(b->data)) {
+	if (!b || !valid_addr(b->data)) {
 		DEBUG_PRINT("ERROR: b is not a valid block!\n");
 		return -1;
 	}
 
 	int index = bindex(b->size);
-	int i;
 	t_block temp = NULL;
 
 	DEBUG_PRINT("bindex(b->size) = %d\n", index);
@@ -134,8 +133,29 @@ int push_free_block(t_block b) {
 	}
 }
 
-t_block pop_free_block(t_block b) {
+t_block remove_free_block(t_block b) {
 	return NULL;
+}
+
+t_block pop_free_block(size_t size) {
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("size_t size = %lu\n", size);
+
+	int index = bindex(size);
+	t_block temp = NULL;
+
+	if (amount_free_blocks[index]) {
+		temp = free_blocks[index];
+
+		DEBUG_PRINT("block = %p\n", temp);
+		DEBUG_PRINT("size = %lu\n", temp->size);
+
+		free_blocks[index] = (t_block) *((int*) temp->ptr);
+		amount_free_blocks[index]--;
+	}
+
+	DEBUG_PRINT("**END**\n\n");
+	return temp;
 }
 
 void split_block(t_block b, size_t size) {
@@ -339,10 +359,22 @@ int main() {
 
 	print_heap();
 
-	int resk = get_free_block(kb);
-	int resh = get_free_block(hb);
+	int resk = check_free_block(kb);
+	int resh = check_free_block(hb);
+	int resg = check_free_block(gb);
 
-	printf("%d %d\n", resk, resh);
+	printf("%d %d %d\n", resk, resh, resg);
+
+	t_block new_block = pop_free_block(4);
+	new_block = pop_free_block(4);
+
+	printf("%p\n", new_block);
+
+	resk = check_free_block(kb);
+	resh = check_free_block(hb);
+	resg = check_free_block(gb);
+
+	printf("%d %d %d\n", resk, resh, resg);
 
 	int* ptrr = (int*) free_blocks[2]->ptr;
 	printf("%p %p\n", free_blocks[2], (void*) *ptrr);
