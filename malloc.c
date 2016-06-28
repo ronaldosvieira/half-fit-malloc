@@ -133,8 +133,59 @@ int push_free_block(t_block b) {
 	}
 }
 
-t_block remove_free_block(t_block b) {
-	return NULL;
+int remove_free_block(t_block b) {
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("t_block b = %p\n", b);
+
+	if (!b || !valid_addr(b->data)) {
+		DEBUG_PRINT("ERROR: b is not a valid block!\n");
+		return -1;
+	}
+
+	int index = bindex(b->size);
+	t_block temp = NULL;
+	t_block last = NULL;
+	int i = 0;
+
+	if (amount_free_blocks[index]) {
+		temp = free_blocks[index];
+		DEBUG_PRINT("temp = %p\n", temp);
+
+		while (i < amount_free_blocks[index] && valid_addr(temp->data)) {
+			++i;
+
+			if (temp->ptr == b->ptr
+				&& temp->size == b->size) {
+				DEBUG_PRINT("found at pos %d\n", i);
+
+				if (i < amount_free_blocks[index]) {
+					if (last) {
+						DEBUG_PRINT("case: |_|->|b|->|_|\n");
+
+						int* c = (int*) last->ptr;
+						*c = (int*) *((int*) temp->ptr);
+					} else {
+						DEBUG_PRINT("case: |b|->|_|\n");
+
+						free_blocks[index] = (t_block) *((int*) temp->ptr);
+					}
+				}
+
+				amount_free_blocks[index]--;
+
+				DEBUG_PRINT("**END**\n\n");
+				return i;
+			}
+
+			last = temp;
+			temp = *((int*) temp->ptr);
+			DEBUG_PRINT("temp = %p\n", temp);
+		}
+	}
+
+	DEBUG_PRINT("not found\n");
+	DEBUG_PRINT("**END**\n\n");
+	return 0;
 }
 
 t_block pop_free_block(size_t size) {
@@ -365,10 +416,9 @@ int main() {
 
 	printf("%d %d %d\n", resk, resh, resg);
 
-	t_block new_block = pop_free_block(4);
-	new_block = pop_free_block(4);
-
-	printf("%p\n", new_block);
+	printf("removeu hb? %d\n", remove_free_block(hb));
+	printf("removeu hb? %d\n", remove_free_block(hb));
+	printf("removeu gb? %d\n", remove_free_block(gb));
 
 	resk = check_free_block(kb);
 	resh = check_free_block(hb);
@@ -376,8 +426,10 @@ int main() {
 
 	printf("%d %d %d\n", resk, resh, resg);
 
-	int* ptrr = (int*) free_blocks[2]->ptr;
-	printf("%p %p\n", free_blocks[2], (void*) *ptrr);
+	printf("amount_free_blocks[2] = %d\n", amount_free_blocks[2]);
+	printf("free_blocks[2] = %p\n", free_blocks[2]);
+	//int* ptrr = (int*) free_blocks[2]->ptr;
+	//printf("%p %p\n", free_blocks[2], (void*) *ptrr);
 
 	return 0;
 }
