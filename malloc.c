@@ -302,13 +302,22 @@ t_block extend_heap(t_block last, size_t size) {
  * @return Endereço do bloco, independente se foi fundido
  */
 t_block fusion(t_block b) {
+	DEBUG_PRINT("**STARTING**\n");
+
 	if (b->next && b->next->free) {
+		DEBUG_PRINT("Block %p fused with %p\n", b, b->next);
+
+		remove_free_block(b);
+		remove_free_block(b->next);
 		b->size += BLOCK_SIZE + b->next->size;
 		b->next = b->next->next;
+
+		DEBUG_PRINT("New size: %lu\n", b->size);
 
 		if (b->next) b->next->prev = b;
 	}
 
+	DEBUG_PRINT("**END**\n\n");
 	return b;
 }
 
@@ -370,25 +379,45 @@ void* calloc(size_t number, size_t size) {
  * @param p Endereço da alocação a ser desalocada
  */
 void free(void* p) {
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("void* p = %p\n", p);
+
 	t_block b;
+	int still_exists = 1;
+	int fused = 0;
 
 	if (valid_addr(p)) {
+		DEBUG_PRINT("Valid block\n");
+
 		b = get_block(p);
 		b->free = 1;
+		DEBUG_PRINT("Block set to free\n\n");
 
 		if (b->prev && b->prev->free) {
+			DEBUG_PRINT("Calling fusion with prev\n");
 			b = fusion(b->prev);
 		}
 
 		if (b->next) {
-			fusion(b);
+			DEBUG_PRINT("Calling fusion with next\n");
+			b = fusion(b);
 		} else {
+			DEBUG_PRINT("Unallocating p from heap\n");
 			if (b->prev) b->prev->next = NULL;
 			else base_address = NULL;
 
 			brk(b);
+
+			still_exists = 0;
+		}
+
+		if (still_exists) {
+			push_free_block(b);
+			DEBUG_PRINT("Block added to freelist\n");
 		}
 	}
+
+	DEBUG_PRINT("**END**\n\n");
 }
 
 void print_heap() {
@@ -437,25 +466,25 @@ int main() {
 
 	// print_heap();
 
-	// free(j);
+	//free(k);
 	// free(h);
 
-	// print_heap();
+	//print_heap();
 
 	// j = (int*) malloc(sizeof(int));
 
 	// print_heap();
 
 	t_block kb = get_block(k);
-	push_free_block(kb);
+	//push_free_block(kb);
 
 	t_block hb = get_block(h);
-	push_free_block(hb);
+	//push_free_block(hb);
 
 	t_block gb = get_block(g);
-	push_free_block(gb);
+	//push_free_block(gb);
 
-	print_heap();
+	//print_heap();
 
 	int resk = check_free_block(kb);
 	int resh = check_free_block(hb);
@@ -463,18 +492,24 @@ int main() {
 
 	printf("%d %d %d\n", resk, resh, resg);
 
+	//free(h);
+	free(g);
+
+	/*printf("removeu hb? %d\n", remove_free_block(hb));
 	printf("removeu hb? %d\n", remove_free_block(hb));
-	printf("removeu hb? %d\n", remove_free_block(hb));
-	printf("removeu gb? %d\n", remove_free_block(gb));
+	printf("removeu gb? %d\n", remove_free_block(gb));*/
 
 	resk = check_free_block(kb);
 	resh = check_free_block(hb);
 	resg = check_free_block(gb);
 
-	printf("%d %d %d\n", resk, resh, resg);
+	printf("%d %d\n", resk, resg);
 
 	printf("amount_free_blocks[2] = %d\n", amount_free_blocks[2]);
 	printf("free_blocks[2] = %p\n", free_blocks[2]);
+
+	printf("amount_free_blocks[5] = %d\n", amount_free_blocks[5]);
+	printf("free_blocks[5] = %p\n", free_blocks[5]);
 	//int* ptrr = (int*) free_blocks[2]->ptr;
 	//printf("%p %p\n", free_blocks[2], (void*) *ptrr);
 
