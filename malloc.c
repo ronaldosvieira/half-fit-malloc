@@ -225,7 +225,7 @@ t_block pop_free_block(size_t size) {
 		amount_free_blocks[index]--;
 	}
 
-	if ()
+	if (temp == NULL) DEBUG_PRINT("Not found");
 
 	DEBUG_PRINT("**END**\n\n");
 	return temp;
