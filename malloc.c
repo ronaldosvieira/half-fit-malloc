@@ -214,18 +214,23 @@ t_block pop_free_block(size_t size) {
 
 	int index = rindex(size);
 	t_block temp = NULL;
+	int i = 0;
 
-	if (amount_free_blocks[index]) {
-		temp = free_blocks[index];
+	do {
+		if (amount_free_blocks[index + i]) {
+			temp = free_blocks[index + i];
 
-		DEBUG_PRINT("block = %p\n", temp);
-		DEBUG_PRINT("size = %lu\n", temp->size);
+			DEBUG_PRINT("block = %p\n", temp);
+			DEBUG_PRINT("size = %lu\n", temp->size);
 
-		free_blocks[index] = (t_block) *((int*) temp->ptr);
-		amount_free_blocks[index]--;
-	}
+			free_blocks[index + i] = (t_block) *((int*) temp->ptr);
+			amount_free_blocks[index + i]--;
+		}
 
-	if (temp == NULL) DEBUG_PRINT("Not found");
+		++i;
+	} while (temp == NULL && index + i < 32);
+
+	if (temp == NULL) DEBUG_PRINT("Not found on index %d\n", index + i);
 
 	DEBUG_PRINT("**END**\n\n");
 	return temp;
@@ -262,6 +267,9 @@ void split_block(t_block b, size_t size) {
  * @return Um novo bloco com uma alocação de tamanho size
  */
 t_block extend_heap(t_block last, size_t size) {
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("size_t size = %lu\n", size);
+	
 	t_block b;
 
 	b = sbrk(0);
@@ -277,6 +285,7 @@ t_block extend_heap(t_block last, size_t size) {
 
 	if (last) last->next = b;
 
+	DEBUG_PRINT("**END**\n\n");
 	return b;
 }
 
@@ -314,6 +323,8 @@ t_block fusion(t_block b) {
 void* mymalloc(size_t size) {
 	t_block b, last;
 	size = align4(size);
+
+	if (rindex(size) >= 32) return NULL;
 
 	if (base_address) {
 		last = base_address;
@@ -441,13 +452,15 @@ int main() {
 	// int *j = (int*) malloc(sizeof(int) * 20);
 	// int *i = (int*) malloc(sizeof(int));
 	int *h = (int*) mymalloc(sizeof(int));
-	int *g = (int*) mymalloc(sizeof(int));
 
 	*k = 11;
+	free(k);
 	// *j = 12;
 	// *i = 13;
 	*h = 14;
-	*g = 15;
+
+	char *g = (char*) mymalloc(sizeof(char));
+	*g = 'a';
 
 	// print_heap();
 
@@ -460,7 +473,7 @@ int main() {
 
 	// print_heap();
 
-	t_block kb = get_block(k);
+	/*t_block kb = get_block(k);
 	//push_free_block(kb);
 
 	t_block hb = get_block(h);
@@ -475,16 +488,16 @@ int main() {
 	int resh = check_free_block(hb);
 	int resg = check_free_block(gb);
 
-	printf("%d %d %d\n", resk, resh, resg);
+	printf("%d %d %d\n", resk, resh, resg);*/
 
 	//free(h);
-	free(g);
+	//free(g);
 
 	/*printf("removeu hb? %d\n", remove_free_block(hb));
 	printf("removeu hb? %d\n", remove_free_block(hb));
 	printf("removeu gb? %d\n", remove_free_block(gb));*/
 
-	resk = check_free_block(kb);
+	/*resk = check_free_block(kb);
 	resh = check_free_block(hb);
 	resg = check_free_block(gb);
 
@@ -494,7 +507,7 @@ int main() {
 	printf("free_blocks[2] = %p\n", free_blocks[2]);
 
 	printf("amount_free_blocks[5] = %d\n", amount_free_blocks[5]);
-	printf("free_blocks[5] = %p\n", free_blocks[5]);
+	printf("free_blocks[5] = %p\n", free_blocks[5]);*/
 	//int* ptrr = (int*) free_blocks[2]->ptr;
 	//printf("%p %p\n", free_blocks[2], (void*) *ptrr);
 
