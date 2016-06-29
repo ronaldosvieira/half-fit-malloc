@@ -356,7 +356,7 @@ void* hfmalloc(size_t size) {
 	return b->data;
 }
 
-void* calloc(size_t number, size_t size) {
+void* hfcalloc(size_t number, size_t size) {
 	size_t *new;
 	size_t s4, i;
 
@@ -376,7 +376,7 @@ void* calloc(size_t number, size_t size) {
  * com o hfmalloc
  * @param p Endereço da alocação a ser desalocada
  */
-void free(void* p) {
+void hffree(void* p) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("void* p = %p\n", p);
 
