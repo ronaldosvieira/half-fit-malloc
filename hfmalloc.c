@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DEBUG 0
+#define DEBUG 3
 
 #if defined(DEBUG) && DEBUG > 0
 	#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
@@ -123,39 +123,42 @@ int push_free_block(t_block b) {
 
 	int index = bindex(b->size);
 	t_block temp = NULL;
+	int i = 0;
 
 	DEBUG_PRINT("bindex(b->size) = %d\n", index);
 
-	if (amount_free_blocks[index] < 11) {
-		DEBUG_PRINT("amount_free_blocks[%d] < 11\n", index);
+	do {
+		if (amount_free_blocks[index - i] <= 32) {
+			DEBUG_PRINT("amount_free_blocks[%d] < 32\n", index - i);
 
-		if (amount_free_blocks[index] == 0) {
-			DEBUG_PRINT("amount_free_blocks[%d] == 0\n", index);
+			if (amount_free_blocks[index - i] == 0) {
+				DEBUG_PRINT("amount_free_blocks[%d] == 0\n", index - i);
 
-			free_blocks[index] = b;
-		} else {
-			DEBUG_PRINT("amount_free_blocks[%d] != 0\n", index);
-			temp = free_blocks[index];
-			DEBUG_PRINT("temp = %p\n", temp);
+				free_blocks[index - i] = b;
+			} else {
+				DEBUG_PRINT("amount_free_blocks[%d] != 0\n", index - i);
+				temp = free_blocks[index - i];
+				DEBUG_PRINT("temp = %p\n", temp);
 
-			int* c = (int*) b->ptr;
-			*c = (int*) temp;
+				int* c = (int*) b->ptr;
+				*c = (int*) temp;
 
-			free_blocks[index] = b;
+				free_blocks[index - i] = b;
 
-			DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
+				DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
+			}
+
+			amount_free_blocks[index - i]++;
+
+			DEBUG_PRINT("**END**\n\n");
+			return 0;
 		}
+	} while (index - i >= 0);
 
-		amount_free_blocks[index]++;
+	DEBUG_PRINT("amount_free_blocks[%d] >= 32\n", index);
 
-		DEBUG_PRINT("**END**\n\n");
-		return 0;
-	} else {
-		DEBUG_PRINT("amount_free_blocks[%d] >= 11\n", index);
-
-		DEBUG_PRINT("**END**\n\n");
-		return -1;
-	}
+	DEBUG_PRINT("**END**\n\n");
+	return -1;
 }
 
 /**
@@ -250,8 +253,8 @@ t_block pop_free_block(size_t size) {
 		++i;
 	} while (temp == NULL && index + i < 32);
 
-	if (temp == NULL) DEBUG_PRINT("Not found on index %d\n", index + i);
-	else DEBUG_PRINT("Found on index %d\n", index + i);
+	if (temp == NULL) DEBUG_PRINT("Not found on index %d\n", index + i - 1);
+	else DEBUG_PRINT("Found on index %d\n", index + i - 1);
 
 	DEBUG_PRINT("**END**\n\n");
 	return temp;
@@ -354,7 +357,6 @@ void* hfmalloc(size_t size) {
 
 		if (b) {
 			if ((b->size - size) >= (BLOCK_SIZE + 4)) {
-				remove_free_block(b);
 				split_block(b, size);
 				push_free_block(b);
 			}
