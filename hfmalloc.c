@@ -64,6 +64,12 @@ int valid_addr(void* p) {
 	return 0;
 }
 
+/**
+ * Checa se um bloco está na lista de blocos livres
+ * @param b Bloco a ser procurado
+ * @return inteiro maior que zero, caso tenha sido feita a remoção
+ 		0 caso contrário
+ */
 int check_free_block(t_block b) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("t_block b = %p\n", b);
@@ -98,6 +104,14 @@ int check_free_block(t_block b) {
 	return 0;
 }
 
+/**
+ * Insere um bloco da lista de blocos livres, se possível.
+ * Caso não seja possível, tenta inserir na posição de índice 
+ imediatamente menor até que seja possível
+ * @param b Bloco a ser inserido
+ * @return 0 caso a inserção tenha sizo realizada com sucesso
+ 		-1 caso contrário
+ */
 int push_free_block(t_block b) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("t_block b = %p\n", b);
@@ -144,6 +158,12 @@ int push_free_block(t_block b) {
 	}
 }
 
+/**
+ * Remove um bloco da lista de blocos livres, se possível
+ * @param b Bloco a ser removido
+ * @return inteiro maior que zero, caso tenha sido feita a remoção
+ 		0 caso contrário
+ */
 int remove_free_block(t_block b) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("t_block b = %p\n", b);
@@ -382,7 +402,6 @@ void hffree(void* p) {
 
 	t_block b;
 	int still_exists = 1;
-	int fused = 0;
 
 	if (valid_addr(p)) {
 		DEBUG_PRINT("Valid block\n");
@@ -451,35 +470,3 @@ void print_heap() {
 
 	printf("\n### FIM DO HEAP ####\n");
 }
-
-/*int main() {
-	DEBUG_PRINT("Debugging is enabled.\n");    
-    DEBUG_PRINT("Debug level: %d\n\n", (int) DEBUG);
-
-    /*int i;
-    int* test1[256];
-    int* test2[256];
-
-    // TESTE 1 //
-    for (i = 0; i < 200; i++) {
-    	test1[i] = (int*) mymalloc(sizeof(int));
-    }
-
-    for (i = 0; i < 200; i++) {
-    	*test1[i] = i;
-    }
-
-    for (i = 0; i < 200; i++) {
-    	free(test1[i]);
-    }
-
-    // TESTE 2 //
-    for (i = 0; i < 200; i++) {
-    	test2[i] = (int*) mymalloc(sizeof(int));
-    	*test2[i] = i;
-    	free(test2[i]);
-    }
-
-
-	return 0;
-}*/
