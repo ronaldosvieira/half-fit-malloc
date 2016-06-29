@@ -1,34 +1,4 @@
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <math.h>
-
-#define DEBUG 3
-
-#if defined(DEBUG) && DEBUG > 0
-	#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
-    __FILE__, __LINE__, __func__, ##args)
-#else
-	#define DEBUG_PRINT(fmt, args...) /* Don't do anything in release builds */
-#endif
-
-#define align4(x) (((((x)-1)>>2)<<2)+4)
-#define bindex(s) (int)floor(1.0*log10(s)/log10(2))
-#define rindex(r) (int)floor(1.0*log10(r-1)/log10(2))+1
-
-typedef struct s_block *t_block;
-
-struct s_block {
-	size_t size;
-	t_block prev;
-	t_block next;
-	int free;
-	void* ptr;
-	char data[1];
-};
-
-#define BLOCK_SIZE 40
-#define WORD_SIZE 32
+#include "hfmalloc.h"
 
 int amount_free_blocks[WORD_SIZE] = {0};
 t_block free_blocks[WORD_SIZE] = {NULL};
