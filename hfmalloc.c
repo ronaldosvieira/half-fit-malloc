@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DEBUG 3
+#define DEBUG 0
 
 #if defined(DEBUG) && DEBUG > 0
 	#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
@@ -27,7 +27,6 @@ struct s_block {
 	char data[1];
 };
 
-// sizeof(struct s_block) nao vai retornar o numero correto
 #define BLOCK_SIZE 40
 #define WORD_SIZE 32
 
@@ -35,6 +34,7 @@ int amount_free_blocks[WORD_SIZE] = {0};
 t_block free_blocks[WORD_SIZE] = {NULL};
 
 void *base_address = NULL;
+t_block last = NULL;
 
 /**
  * Obtém um ponteiro para o bloco associado a uma alocação de memória
@@ -231,6 +231,7 @@ t_block pop_free_block(size_t size) {
 	} while (temp == NULL && index + i < 32);
 
 	if (temp == NULL) DEBUG_PRINT("Not found on index %d\n", index + i);
+	else DEBUG_PRINT("Found on index %d\n", index + i);
 
 	DEBUG_PRINT("**END**\n\n");
 	return temp;
@@ -266,10 +267,10 @@ void split_block(t_block b, size_t size) {
  * @param size Tamanho a ser requisitado
  * @return Um novo bloco com uma alocação de tamanho size
  */
-t_block extend_heap(t_block last, size_t size) {
+t_block extend_heap(size_t size) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("size_t size = %lu\n", size);
-	
+
 	t_block b;
 
 	b = sbrk(0);
@@ -284,6 +285,8 @@ t_block extend_heap(t_block last, size_t size) {
 	b->free = 0;
 
 	if (last) last->next = b;
+
+	last = b;
 
 	DEBUG_PRINT("**END**\n\n");
 	return b;
@@ -320,14 +323,13 @@ t_block fusion(t_block b) {
  * @param size Tamanho da alocação a ser feita
  * @return Endereço da alocação realizada
  */
-void* mymalloc(size_t size) {
-	t_block b, last;
+void* hfmalloc(size_t size) {
+	t_block b;
 	size = align4(size);
 
-	if (rindex(size) >= 32) return NULL;
+	if (!size || rindex(size) >= 32) return NULL;
 
 	if (base_address) {
-		last = base_address;
 		b = pop_free_block(size);
 
 		if (b) {
@@ -339,12 +341,12 @@ void* mymalloc(size_t size) {
 
 			b->free = 0;
 		} else {
-			b = extend_heap(last, size);
+			b = extend_heap(size);
 
 			if (!b) return NULL;
 		}
 	} else {
-		b = extend_heap(NULL, size);
+		b = extend_heap(size);
 		
 		if (!b) return NULL;
 
@@ -354,11 +356,11 @@ void* mymalloc(size_t size) {
 	return b->data;
 }
 
-/*void* calloc(size_t number, size_t size) {
+void* calloc(size_t number, size_t size) {
 	size_t *new;
 	size_t s4, i;
 
-	new = mymalloc(number * size);
+	new = hfmalloc(number * size);
 
 	if (new) {
 		s4 = align4(number * size) << 2;
@@ -367,7 +369,7 @@ void* mymalloc(size_t size) {
 	}
 
 	return new;
-}*/
+}
 
 /**
  * Realiza a desalocação de uma alocação feita
@@ -399,8 +401,14 @@ void free(void* p) {
 			b = fusion(b);
 		} else {
 			DEBUG_PRINT("Unallocating p from heap\n");
-			if (b->prev) b->prev->next = NULL;
-			else base_address = NULL;
+			if (b->prev) {
+				b->prev->next = NULL;
+				last = b->prev;
+			}
+			else {
+				base_address = NULL;
+				last = NULL;
+			}
 
 			brk(b);
 
@@ -444,72 +452,34 @@ void print_heap() {
 	printf("\n### FIM DO HEAP ####\n");
 }
 
-int main() {
+/*int main() {
 	DEBUG_PRINT("Debugging is enabled.\n");    
     DEBUG_PRINT("Debug level: %d\n\n", (int) DEBUG);
 
-	int *k = (int*) mymalloc(sizeof(int));
-	// int *j = (int*) malloc(sizeof(int) * 20);
-	// int *i = (int*) malloc(sizeof(int));
-	int *h = (int*) mymalloc(sizeof(int));
+    /*int i;
+    int* test1[256];
+    int* test2[256];
 
-	*k = 11;
-	free(k);
-	// *j = 12;
-	// *i = 13;
-	*h = 14;
+    // TESTE 1 //
+    for (i = 0; i < 200; i++) {
+    	test1[i] = (int*) mymalloc(sizeof(int));
+    }
 
-	char *g = (char*) mymalloc(sizeof(char));
-	*g = 'a';
+    for (i = 0; i < 200; i++) {
+    	*test1[i] = i;
+    }
 
-	// print_heap();
+    for (i = 0; i < 200; i++) {
+    	free(test1[i]);
+    }
 
-	//free(k);
-	// free(h);
+    // TESTE 2 //
+    for (i = 0; i < 200; i++) {
+    	test2[i] = (int*) mymalloc(sizeof(int));
+    	*test2[i] = i;
+    	free(test2[i]);
+    }
 
-	//print_heap();
-
-	// j = (int*) malloc(sizeof(int));
-
-	// print_heap();
-
-	/*t_block kb = get_block(k);
-	//push_free_block(kb);
-
-	t_block hb = get_block(h);
-	//push_free_block(hb);
-
-	t_block gb = get_block(g);
-	//push_free_block(gb);
-
-	//print_heap();
-
-	int resk = check_free_block(kb);
-	int resh = check_free_block(hb);
-	int resg = check_free_block(gb);
-
-	printf("%d %d %d\n", resk, resh, resg);*/
-
-	//free(h);
-	//free(g);
-
-	/*printf("removeu hb? %d\n", remove_free_block(hb));
-	printf("removeu hb? %d\n", remove_free_block(hb));
-	printf("removeu gb? %d\n", remove_free_block(gb));*/
-
-	/*resk = check_free_block(kb);
-	resh = check_free_block(hb);
-	resg = check_free_block(gb);
-
-	printf("%d %d\n", resk, resg);
-
-	printf("amount_free_blocks[2] = %d\n", amount_free_blocks[2]);
-	printf("free_blocks[2] = %p\n", free_blocks[2]);
-
-	printf("amount_free_blocks[5] = %d\n", amount_free_blocks[5]);
-	printf("free_blocks[5] = %p\n", free_blocks[5]);*/
-	//int* ptrr = (int*) free_blocks[2]->ptr;
-	//printf("%p %p\n", free_blocks[2], (void*) *ptrr);
 
 	return 0;
-}
+}*/
