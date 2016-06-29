@@ -199,6 +199,15 @@ int remove_free_block(t_block b) {
 	return 0;
 }
 
+/**
+ * Busca um bloco livre de um determinado tamanho
+ * na lista de blocos livres utilizando a estratégia
+ * half fit
+ * @param last Endereço do último bloco procurado
+ * @param size Tamanho mínimo do blocos
+ * @return Um bloco livre de tamanho >= size, caso exista.
+ * 	NULL caso contrário.
+ */
 t_block pop_free_block(size_t size) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("size_t size = %lu\n", size);
@@ -215,6 +224,8 @@ t_block pop_free_block(size_t size) {
 		free_blocks[index] = (t_block) *((int*) temp->ptr);
 		amount_free_blocks[index]--;
 	}
+
+	if ()
 
 	DEBUG_PRINT("**END**\n\n");
 	return temp;
@@ -242,32 +253,6 @@ void split_block(t_block b, size_t size) {
 	if (new->next) {
 		new->next->prev = new;
 	}
-}
-
-/**
- * Busca um bloco livre de um determinado tamanho
- * na lista de blocos livres utilizando a estratégia
- * first fit
- * @param last Endereço do último bloco procurado
- * @param size Tamanho mínimo do bloco
- * @return Um bloco livre de tamanho >= size, caso exista.
- * 	NULL caso contrário.
- */
-t_block find_block(t_block *last, size_t size) {
-	t_block b = base_address;
-	t_block best = NULL;
-
-	while (b) {
-		if (b->free && b->size >= size) {
-			if (!best || b->size < best->size)
-				best = b;
-		}
-
-		*last = b;
-		b = b->next;
-	}
-
-	return best? best : b;
 }
 
 /**
@@ -332,13 +317,13 @@ void* mymalloc(size_t size) {
 
 	if (base_address) {
 		last = base_address;
-		b = find_block(&last, size);
+		b = pop_free_block(size);
 
 		if (b) {
-			fusion(b);
-
 			if ((b->size - size) >= (BLOCK_SIZE + 4)) {
+				remove_free_block(b);
 				split_block(b, size);
+				push_free_block(b);
 			}
 
 			b->free = 0;
@@ -358,7 +343,7 @@ void* mymalloc(size_t size) {
 	return b->data;
 }
 
-void* calloc(size_t number, size_t size) {
+/*void* calloc(size_t number, size_t size) {
 	size_t *new;
 	size_t s4, i;
 
@@ -371,7 +356,7 @@ void* calloc(size_t number, size_t size) {
 	}
 
 	return new;
-}
+}*/
 
 /**
  * Realiza a desalocação de uma alocação feita
@@ -391,7 +376,7 @@ void free(void* p) {
 
 		b = get_block(p);
 		b->free = 1;
-		DEBUG_PRINT("Block set to free\n\n");
+		DEBUG_PRINT("Block set to free\n");
 
 		if (b->prev && b->prev->free) {
 			DEBUG_PRINT("Calling fusion with prev\n");
