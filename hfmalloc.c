@@ -66,7 +66,6 @@ int check_free_block(t_block b) {
 			return i;
 		}
 
-		//temp = *((int*) temp->ptr);
 		temp = temp->ptr;
 		DEBUG_PRINT("temp = %p\n", temp);
 	}
@@ -117,13 +116,10 @@ int push_free_block(t_block b) {
 				temp = free_blocks[index - i];
 				DEBUG_PRINT("temp = %p\n", temp);
 
-				/*int* c = (int*) b->ptr;
-				*c = (int*) temp;*/
 				b->ptr = temp;
 
 				free_blocks[index - i] = b;
 
-				//DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
 				DEBUG_PRINT("b->ptr = %p\n", b->ptr);
 			}
 
@@ -235,7 +231,6 @@ t_block pop_free_block(size_t size) {
 			DEBUG_PRINT("block = %p\n", temp);
 			DEBUG_PRINT("size = %lu\n", temp->size);
 
-			//free_blocks[index + i] = (t_block) *((int*) temp->ptr);
 			free_blocks[index + i] = temp->ptr;
 			amount_free_blocks[index + i]--;
 		}
@@ -266,7 +261,6 @@ void split_block(t_block b, size_t size) {
 	new->next = b->next;
 	new->prev = b;
 	new->free = 1;
-	//new->ptr = new->data;
 
 	b->size = size;
 	b->next = new;
@@ -298,7 +292,6 @@ t_block extend_heap(size_t size) {
 	b->size = size;
 	b->next = NULL;
 	b->prev = last;
-	//b->ptr = b->data;
 	b->free = 0;
 
 	if (last) last->next = b;
@@ -469,7 +462,6 @@ void print_heap() {
 			printf("ptr  = %p\n", b->ptr);
 			printf("data = %p\n", b->data);
 			printf("content = %d\n", *((int*) b->data));
-			//printf("content = %p\n", (int*) *((int*) b->ptr));
 			printf("\n");
 		}
 
