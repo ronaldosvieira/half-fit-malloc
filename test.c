@@ -24,10 +24,12 @@ double test1(int n, void* (*mallocf)(size_t), void (*freef)(size_t)) {
 	int i;
 
 	for (i = 0; i < n; i++) {
+		//printf("######################### malloc %d\n", i);
 		alocs[i] = (int*) (*mallocf)(sizeof(int));
 	}
 
 	for (i = 0; i < n; i++) {
+		//printf("######################### free %d\n", i);
 		(*freef)(alocs[i]);
 	}
 }
@@ -54,10 +56,28 @@ double test3(int n, void* (*mallocf)(size_t), void (*freef)(size_t)) {
 
 	while (i < n || j < n) {
 		r = (int) rand() % 2;
-		printf("######################### %d %d\n", i, j);
+		//printf("######################### %d %d\n", i, j);
 
 		if ((r || j >= i) && i < n) {
 			alocs[i++] = (int*) (*mallocf)(sizeof(int));
+		} else {
+			(*freef)(alocs[j++]);
+		}
+	}
+}
+
+double test4(int n, void* (*mallocf)(size_t), void (*freef)(size_t)) {
+	int* alocs[n];
+	int i = 0;
+	int j = 0;
+	int r;
+
+	while (i < n || j < n) {
+		r = (int) rand() % 2;
+		//printf("######################### %d %d\n", i, j);
+
+		if ((r || j >= i) && i < n) {
+			alocs[i++] = (int*) (*mallocf)(sizeof(int) * ((rand() % 32767) + 1));
 		} else {
 			(*freef)(alocs[j++]);
 		}
@@ -70,8 +90,8 @@ int main() {
 	double media = 0.0;
 	
 	int NUM_MALLOCS = 6;
-	int NUM_ITER = 10;
-	int NUM_TESTES = 3;
+	int NUM_ITER = 1;
+	int NUM_TESTES = 4;
 
 	char* nomes[] = {"UNIX", "Half fit", "Quick fit", "First fit", "Best fit", "Worst fit"};
 	void* mallocs[] = {&malloc, &hfmalloc, &qfmalloc, &ffmalloc, &bfmalloc, &wfmalloc};
@@ -81,7 +101,7 @@ int main() {
 						"N alocações tam. variado sequenciais",
 						"N alocações tam. fixo aleatórias",
 						"N alocações tam. variado aleatórias"};
-	void* f_testes[] = {&test1, &test2, &test3};
+	void* f_testes[] = {&test1, &test2, &test3, &test4};
 
 	for (t = 0; t < NUM_TESTES; t++) {
 		printf("\n##### %s #####\n\n", n_testes[t]);
@@ -90,7 +110,7 @@ int main() {
 			media = 0.0;
 
 			for (j = 0; j < NUM_ITER; j++) {
-				media += measure(100, f_testes[t], mallocs[i], frees[i]);
+				media += measure(10, f_testes[t], mallocs[i], frees[i]);
 			}
 
 			printf("%s = %lf\n", 

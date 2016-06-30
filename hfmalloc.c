@@ -100,8 +100,13 @@ int push_free_block(t_block b) {
 	DEBUG_PRINT("bindex(b->size) = %d\n", index);
 
 	do {
+		DEBUG_PRINT("amount_free_blocks[%d] == %d\n", 
+				index - i,
+				amount_free_blocks[index - i]);
 		if (amount_free_blocks[index - i] <= 32) {
-			DEBUG_PRINT("amount_free_blocks[%d] < 32\n", index - i);
+			DEBUG_PRINT("amount_free_blocks[%d] == %d\n", 
+				index - i,
+				amount_free_blocks[index - i]);
 
 			if (amount_free_blocks[index - i] == 0) {
 				DEBUG_PRINT("amount_free_blocks[%d] == 0\n", index - i);
@@ -127,7 +132,8 @@ int push_free_block(t_block b) {
 			DEBUG_PRINT("**END**\n\n");
 			return 0;
 		}
-	} while (index - i >= 0);
+
+	} while (index - ++i >= 0);
 
 	DEBUG_PRINT("amount_free_blocks[%d] >= 32\n", index);
 
@@ -217,7 +223,13 @@ t_block pop_free_block(size_t size) {
 	int i = 0;
 
 	do {
+		DEBUG_PRINT("amount_free_blocks[%d] == %d\n",
+				index + i,
+				amount_free_blocks[index + i]);
 		if (amount_free_blocks[index + i]) {
+			DEBUG_PRINT("amount_free_blocks[%d] == %d\n",
+				index + i,
+				amount_free_blocks[index + i]);
 			temp = free_blocks[index + i];
 
 			DEBUG_PRINT("block = %p\n", temp);
@@ -244,6 +256,8 @@ t_block pop_free_block(size_t size) {
  * @param size Tamanho alvo de um dos blocos
  */
 void split_block(t_block b, size_t size) {
+	DEBUG_PRINT("**STARTING**\n");
+	DEBUG_PRINT("size_t size = %lu\n", size);
 	t_block new;
 
 	new = (t_block) (b->data + size);
@@ -260,6 +274,8 @@ void split_block(t_block b, size_t size) {
 	if (new->next) {
 		new->next->prev = new;
 	}
+
+	DEBUG_PRINT("**END**\n");
 }
 
 /**
@@ -354,7 +370,6 @@ void* hfmalloc(size_t size) {
 	}
 	
 	DEBUG_PRINT("Returning %p\n", (void*) b->data);
-
 	return b->data;
 }
 
@@ -384,6 +399,7 @@ void hffree(void* p) {
 
 	t_block b;
 	int still_exists = 1;
+	int fused = 0;
 
 	if (valid_addr(p)) {
 		DEBUG_PRINT("Valid block\n");
@@ -395,13 +411,19 @@ void hffree(void* p) {
 		if (b->prev && b->prev->free) {
 			DEBUG_PRINT("Calling fusion with prev\n");
 			b = fusion(b->prev);
+			fused = 1;
 		}
 
 		if (b->next) {
 			DEBUG_PRINT("Calling fusion with next\n");
-			b = fusion(b);
+			if (b->next->free) {
+				b = fusion(b);
+				fused = 1;
+			}
 		} else {
 			DEBUG_PRINT("Unallocating p from heap\n");
+			if (fused) remove_free_block(b);
+
 			if (b->prev) {
 				b->prev->next = NULL;
 				last = b->prev;
@@ -421,7 +443,6 @@ void hffree(void* p) {
 			DEBUG_PRINT("Block added to freelist\n");
 		}
 	}
-	
 	DEBUG_PRINT("**END**\n\n");
 }
 
