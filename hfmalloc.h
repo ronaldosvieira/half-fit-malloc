@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define DEBUG 0
+#define DEBUG 3
 
 #if defined(DEBUG) && DEBUG > 0
 	#define DEBUG_PRINT(fmt, args...) fprintf(stderr, "DEBUG: %s:%d:%s(): " fmt, \
@@ -17,7 +17,7 @@
 
 #define align4(x) (((((x)-1)>>2)<<2)+4)
 #define bindex(s) (int)floor(1.0*log10(s)/log10(2))
-#define rindex(r) (int)floor(1.0*log10(r-1)/log10(2))+1
+#define rindex(r) r==0?1:(int)floor(1.0*log10(r-1)/log10(2))+1
 
 typedef struct s_block *t_block;
 
@@ -26,7 +26,7 @@ struct s_block {
 	t_block prev;
 	t_block next;
 	int free;
-	void* ptr;
+	t_block ptr;
 	char data[1];
 };
 

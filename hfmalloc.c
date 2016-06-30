@@ -27,7 +27,7 @@ t_block get_block(void* p) {
 int valid_addr(void* p) {
 	if (base_address) {
 		if (p > base_address && p < sbrk(0)) {
-			return p == (get_block(p))->ptr;
+			return p == (get_block(p))->data;
 		}
 	}
 
@@ -60,13 +60,14 @@ int check_free_block(t_block b) {
 	while (i < amount_free_blocks[index] && valid_addr(temp->data)) {
 		++i;
 
-		if (temp->ptr == b->ptr
+		if (temp->data == b->data
 			&& temp->size == b->size) {
 			DEBUG_PRINT("**END**\n\n");
 			return i;
 		}
 
-		temp = *((int*) temp->ptr);
+		//temp = *((int*) temp->ptr);
+		temp = temp->ptr;
 		DEBUG_PRINT("temp = %p\n", temp);
 	}
 
@@ -95,6 +96,7 @@ int push_free_block(t_block b) {
 	t_block temp = NULL;
 	int i = 0;
 
+	DEBUG_PRINT("b->size = %lu\n", b->size);
 	DEBUG_PRINT("bindex(b->size) = %d\n", index);
 
 	do {
@@ -110,12 +112,14 @@ int push_free_block(t_block b) {
 				temp = free_blocks[index - i];
 				DEBUG_PRINT("temp = %p\n", temp);
 
-				int* c = (int*) b->ptr;
-				*c = (int*) temp;
+				/*int* c = (int*) b->ptr;
+				*c = (int*) temp;*/
+				b->ptr = temp;
 
 				free_blocks[index - i] = b;
 
-				DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
+				//DEBUG_PRINT("c = %p, *c = %p\n", c, (void*) *c);
+				DEBUG_PRINT("b->ptr = %p\n", b->ptr);
 			}
 
 			amount_free_blocks[index - i]++;
@@ -158,7 +162,7 @@ int remove_free_block(t_block b) {
 		while (i < amount_free_blocks[index] && valid_addr(temp->data)) {
 			++i;
 
-			if (temp->ptr == b->ptr
+			if (temp->data == b->data
 				&& temp->size == b->size) {
 				DEBUG_PRINT("found at pos %d\n", i);
 
@@ -166,12 +170,14 @@ int remove_free_block(t_block b) {
 					if (last) {
 						DEBUG_PRINT("case: |_|->|b|->|_|\n");
 
-						int* c = (int*) last->ptr;
-						*c = (int*) *((int*) temp->ptr);
+						/*int* c = (int*) last->ptr;
+						*c = (int*) *((int*) temp->ptr);*/
+						last->ptr = temp->ptr;
 					} else {
 						DEBUG_PRINT("case: |b|->|_|\n");
 
-						free_blocks[index] = (t_block) *((int*) temp->ptr);
+						//free_blocks[index] = (t_block) *((int*) temp->ptr);
+						free_blocks[index] = temp->ptr;
 					}
 				}
 
@@ -182,7 +188,8 @@ int remove_free_block(t_block b) {
 			}
 
 			last = temp;
-			temp = *((int*) temp->ptr);
+			//temp = *((int*) temp->ptr);
+			temp = temp->ptr;
 			DEBUG_PRINT("temp = %p\n", temp);
 		}
 	}
@@ -216,12 +223,13 @@ t_block pop_free_block(size_t size) {
 			DEBUG_PRINT("block = %p\n", temp);
 			DEBUG_PRINT("size = %lu\n", temp->size);
 
-			free_blocks[index + i] = (t_block) *((int*) temp->ptr);
+			//free_blocks[index + i] = (t_block) *((int*) temp->ptr);
+			free_blocks[index + i] = temp->ptr;
 			amount_free_blocks[index + i]--;
 		}
 
 		++i;
-	} while (temp == NULL && index + i < 32);
+	} while (temp == NULL && i < 3 && index + i < 32);
 
 	if (temp == NULL) DEBUG_PRINT("Not found on index %d\n", index + i - 1);
 	else DEBUG_PRINT("Found on index %d\n", index + i - 1);
@@ -244,7 +252,7 @@ void split_block(t_block b, size_t size) {
 	new->next = b->next;
 	new->prev = b;
 	new->free = 1;
-	new->ptr = new->data;
+	//new->ptr = new->data;
 
 	b->size = size;
 	b->next = new;
@@ -274,7 +282,7 @@ t_block extend_heap(size_t size) {
 	b->size = size;
 	b->next = NULL;
 	b->prev = last;
-	b->ptr = b->data;
+	//b->ptr = b->data;
 	b->free = 0;
 
 	if (last) last->next = b;
@@ -345,6 +353,8 @@ void* hfmalloc(size_t size) {
 		base_address = b;
 	}
 	
+	DEBUG_PRINT("Returning %p\n", (void*) b->data);
+
 	return b->data;
 }
 
@@ -411,7 +421,7 @@ void hffree(void* p) {
 			DEBUG_PRINT("Block added to freelist\n");
 		}
 	}
-
+	
 	DEBUG_PRINT("**END**\n\n");
 }
 
@@ -434,6 +444,7 @@ void print_heap() {
 			printf("ptr  = %p\n", b->ptr);
 			printf("data = %p\n", b->data);
 			printf("content = %d\n", *((int*) b->data));
+			//printf("content = %p\n", (int*) *((int*) b->ptr));
 			printf("\n");
 		}
 
