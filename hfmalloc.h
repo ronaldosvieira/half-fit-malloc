@@ -115,8 +115,6 @@ t_block fusion(t_block b);
  */
 void* hfmalloc(size_t size);
 
-void* hfcalloc(size_t number, size_t size);
-
 /**
  * Realiza a desalocação de uma alocação feita
  * com o hfmalloc

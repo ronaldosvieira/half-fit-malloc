@@ -172,13 +172,10 @@ int remove_free_block(t_block b) {
 					if (last) {
 						DEBUG_PRINT("case: |_|->|b|->|_|\n");
 
-						/*int* c = (int*) last->ptr;
-						*c = (int*) *((int*) temp->ptr);*/
 						last->ptr = temp->ptr;
 					} else {
 						DEBUG_PRINT("case: |b|->|_|\n");
 
-						//free_blocks[index] = (t_block) *((int*) temp->ptr);
 						free_blocks[index] = temp->ptr;
 					}
 				}
@@ -364,21 +361,6 @@ void* hfmalloc(size_t size) {
 	
 	DEBUG_PRINT("Returning %p\n", (void*) b->data);
 	return b->data;
-}
-
-void* hfcalloc(size_t number, size_t size) {
-	size_t *new;
-	size_t s4, i;
-
-	new = hfmalloc(number * size);
-
-	if (new) {
-		s4 = align4(number * size) << 2;
-
-		for (i = 0; i < s4; i++) new[i] = 0;
-	}
-
-	return new;
 }
 
 /**
