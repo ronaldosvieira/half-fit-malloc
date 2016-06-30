@@ -77,7 +77,7 @@ double test4(int n, void* (*mallocf)(size_t), void (*freef)(size_t)) {
 		//printf("######################### %d %d\n", i, j);
 
 		if ((r || j >= i) && i < n) {
-			alocs[i++] = (int*) (*mallocf)(sizeof(int) * ((rand() % 32767) + 1));
+			alocs[i++] = (int*) (*mallocf)(sizeof(int) * ((rand() % 32767) + 4));
 		} else {
 			(*freef)(alocs[j++]);
 		}
@@ -91,8 +91,8 @@ int main() {
 	
 	int NUM_MALLOCS = 6;
 	int NUM_ITER = 10;
-	int NUM_TESTES = 4;
-	int NUM_ALLOC = 10;
+	int NUM_TESTES = 3;
+	int NUM_ALLOC = 100;
 
 	char* nomes[] = {"UNIX", "Half fit", "Quick fit", 
 					"First fit", "Best fit", "Worst fit"};
