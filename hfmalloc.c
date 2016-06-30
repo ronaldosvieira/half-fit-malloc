@@ -390,10 +390,6 @@ void hffree(void* p) {
 	DEBUG_PRINT("**STARTING**\n");
 	DEBUG_PRINT("void* p = %p\n", p);
 
-	clock_t t0, t1;
-
-	t0 = clock();
-
 	t_block b;
 	int still_exists = 1;
 	int fused = 0;

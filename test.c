@@ -90,9 +90,9 @@ int main() {
 	double media = 0.0;
 	
 	int NUM_MALLOCS = 6;
-	int NUM_ITER = 1;
+	int NUM_ITER = 10;
 	int NUM_TESTES = 4;
-	int NUM_ALLOC = 100;
+	int NUM_ALLOC = 10;
 
 	char* nomes[] = {"UNIX", "Half fit", "Quick fit", 
 					"First fit", "Best fit", "Worst fit"};
