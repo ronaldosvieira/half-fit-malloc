@@ -92,16 +92,23 @@ int main() {
 	int NUM_MALLOCS = 6;
 	int NUM_ITER = 1;
 	int NUM_TESTES = 4;
+	int NUM_ALLOC = 1000;
 
-	char* nomes[] = {"UNIX", "Half fit", "Quick fit", "First fit", "Best fit", "Worst fit"};
-	void* mallocs[] = {&malloc, &hfmalloc, &qfmalloc, &ffmalloc, &bfmalloc, &wfmalloc};
-	void* frees[] = {&free, &hffree, &qffree, &ffmalloc, &bffree, &wfmalloc};
+	char* nomes[] = {"UNIX", "Half fit", "Quick fit", 
+					"First fit", "Best fit", "Worst fit"};
+	void* mallocs[] = {&malloc, &hfmalloc, &qfmalloc, 
+					&ffmalloc, &bfmalloc, &wfmalloc};
+	void* frees[] = {&free, &hffree, &qffree, 
+					&fffree, &bffree, &wffree};
 
 	char* n_testes[] = {"N alocações tam. fixo sequenciais",
 						"N alocações tam. variado sequenciais",
 						"N alocações tam. fixo aleatórias",
 						"N alocações tam. variado aleatórias"};
 	void* f_testes[] = {&test1, &test2, &test3, &test4};
+
+	FILE *f;
+    f = fopen("testes.csv", "a");
 
 	for (t = 0; t < NUM_TESTES; t++) {
 		printf("\n##### %s #####\n\n", n_testes[t]);
@@ -110,14 +117,18 @@ int main() {
 			media = 0.0;
 
 			for (j = 0; j < NUM_ITER; j++) {
-				media += measure(10, f_testes[t], mallocs[i], frees[i]);
+				media += measure(NUM_ALLOC, f_testes[t], mallocs[i], frees[i]);
 			}
 
 			printf("%s = %lf\n", 
 					nomes[i],
 					media / NUM_ITER);
+			fprintf(f, "%s;%d;%d;%d;%lf\n", nomes[i], t, 
+					50, NUM_ALLOC, media / NUM_ITER);
 		}
 
 		printf("\n#####################\n\n");
 	}
+
+	int fclose(fp);
 }
