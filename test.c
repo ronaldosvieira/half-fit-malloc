@@ -92,7 +92,7 @@ int main() {
 	int NUM_MALLOCS = 6;
 	int NUM_ITER = 1;
 	int NUM_TESTES = 4;
-	int NUM_ALLOC = 1000;
+	int NUM_ALLOC = 100;
 
 	char* nomes[] = {"UNIX", "Half fit", "Quick fit", 
 					"First fit", "Best fit", "Worst fit"};
@@ -123,8 +123,8 @@ int main() {
 			printf("%s = %lf\n", 
 					nomes[i],
 					media / NUM_ITER);
-			fprintf(f, "%s;%d;%d;%d;%lf\n", nomes[i], t, 
-					50, NUM_ALLOC, media / NUM_ITER);
+			/*fprintf(f, "%s;%d;%d;%d;%lf\n", nomes[i], t, 
+					50, NUM_ALLOC, media / NUM_ITER);*/
 		}
 
 		printf("\n#####################\n\n");
